@@ -8,7 +8,7 @@ import seaborn as sns
 # Load the model
 @st.cache_resource
 def load_model():
-    return joblib.load('modelBoosting.joblib')
+    return joblib.load('Model_Save\modelBoosting.joblib')
 
 # App title and description
 st.set_page_config(
