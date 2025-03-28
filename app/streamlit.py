@@ -1,172 +1,149 @@
 import streamlit as st
-import joblib
-import numpy as np
 import pandas as pd
+import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
+import qrcode
+from PIL import Image
+import io
+import base64
 
 # Load the model
-model = joblib.load(r"C:\Model_to_predict_GelHardness\Model_Save\modelBoosting.joblib")
+@st.cache_resource
+def load_model():
+    return joblib.load('Model_Save\modelBoosting.joblib')
 
-# Protein dictionary
-proteins_dict = {
-    'Tilapia (Orechromis niloticus)': 20113, '?-conglycinin (7S)': 10303, 'Amaranth protein isolate': 12601,
-    'Black bean protein isolate (BBPI)': 11804, 'Bovine plasma protein': 30403, 'Casein Protein': 30104,
-    'Chicken plasma protein': 30401, 'Chicken plasma protein ': 30401, 'Chickpea Protein Concentration ': 10417,
-    'Chickpea Protein Isolate': 10412, 'Cowpea Protein': 11701, 'Cowpea protein isolate': 11701,
-    'Dried egg white protein': 30303, 'Duck Egg White Protein': 30305, 'Duck egg white ': 30305, 'Egg White Protein': 30302,
-    'Egg ovalbumin Protein': 30304, 'Egg white ': 30302, 'European Anguilla anguilla (eel) protein isolate (EPI)': 20119,
-    'Ginkgo Seed Protein Isolate (GSPI)': 10501, 'Glycinin (11S)': 10302, 'Lentil Protein Isolate (LPI)': 10107,
-    'Mung Bean Protein Isolate (MBPI)': 10801, 'Native soy protein isolate (SPIn)': 10305,
-    'Oyster (Crassostrea gigas) protein': 20115, 'Pea Protein Concentrate (PPC)': 10404, 'Pea Protein Isolate (PPI)': 10401,
-    'Pea Protein Isolate (PPI) ': 10401, 'Peanut Protein Isolate (PPI)': 11101, 'Porcine Plasma protein': 30402,
-    'Porcine plasma protein': 30402, 'Potato Protein': 12002, 'Potato Protein Isolate ': 12001, 'Potato protein isolate (PPI)': 12001,
-    'Rapeseed protein isolates': 12301, 'Rice Glutelin (RG)': 11301, 'Sheep plasma protein ': 30404,
-    'Silver carp Myofibrillar Protein': 20103, 'Soy Protein Isolate (SPI)': 10301, 'Soy protein Isolate': 10301,
-    'Soy protein isolate': 10301, 'Walnut Protein Isolate (WNPI)': 11501, 'Wheat gluten': 11203,
-    'Whey Protein Isolate (WPI)': 30105, 'Whey protein': 30108, 'Whey protein concentrate': 30107, 'Whey protein isolate': 30105,
-    'oat protein isolate (OPI)': 11002, 'pinto bean protein isolate': 11803, 'whey protein concentrate': 30107,
-    'whey protein isolate': 30105, 'whey protein isolate (WPI)': 30105
+# App title and description
+st.set_page_config(
+    page_title="Protein Gel Hardness Predictor",
+    page_icon="🔬",
+    layout="wide"
+)
+
+st.title("Prédicteur de dureté des gels protéiques")
+st.markdown("""
+Cette application prédit la dureté (solidité/fermeté) des gels protéiques en fonction de différentes propriétés.
+Ajustez simplement les paramètres et cliquez sur 'Prédire' pour obtenir la prédiction.
+""")
+
+# Create a sidebar for inputs
+st.sidebar.header("Paramètres d'entrée")
+
+# Définition des colonnes pour les caractéristiques
+feature_info = {
+    "Code protéine": {"type": "numeric", "min": 10000.0, "max": 90000.0, "default": 30000.0, "step": 1000.0, "help": "Code identifiant le type de protéine"},
+    "Concentration en protéine (%)": {"type": "numeric", "min": 1.0, "max": 20.0, "default": 10.0, "step": 0.5, "help": "Concentration de la protéine en pourcentage"},
+    "Code traitement": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1000.0, "help": "Code identifiant le type de traitement"},
+    "Code condition traitement": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1000.0, "help": "Code pour la condition de traitement"},
+    "Valeur condition traitement": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 100.0, "step": 10.0, "help": "Valeur pour la condition de traitement"},
+    "Température traitement (°C)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 80.0, "step": 5.0, "help": "Température du traitement en °C"},
+    "Temps traitement (min)": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 30.0, "step": 5.0, "help": "Durée du traitement en minutes"},
+    "Additifs": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 0.0, "step": 1000.0, "help": "Code identifiant les additifs utilisés"},
+    "Concentration additifs (%)": {"type": "numeric", "min": 0.0, "max": 10.0, "default": 0.5, "step": 0.1, "help": "Concentration des additifs en pourcentage"},
+    "pH": {"type": "numeric", "min": 1.0, "max": 14.0, "default": 7.0, "step": 0.1, "help": "Valeur du pH de la solution"},
+    "Type de sel": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 60000.0, "step": 1000.0, "help": "Code identifiant le type de sel utilisé"},
+    "Force ionique (M)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 0.1, "step": 0.01, "help": "Force ionique en Molarité"},
+    "Température de chauffage (°C) pour préparation du gel": {"type": "numeric", "min": 50.0, "max": 120.0, "default": 90.0, "step": 5.0, "help": "Température de chauffage pour la préparation du gel en °C"},
+    "Temps de chauffage/maintien (min)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 30.0, "step": 5.0, "help": "Durée de chauffage/maintien en minutes"},
+    "Température de stockage des échantillons (°C)": {"type": "numeric", "min": 0.0, "max": 30.0, "default": 4.0, "step": 1.0, "help": "Température de stockage en °C"},
+    "Temps de stockage (h)": {"type": "numeric", "min": 0.0, "max": 72.0, "default": 12.0, "step": 1.0, "help": "Durée de stockage en heures"},
+    "Si un gel peut être formé (0-1)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 1.0, "step": 1.0, "help": "Valeur binaire indiquant si un gel peut être formé (1) ou non (0)"}
 }
 
-# Function to display the two options: Upload file or adjust sliders
-def display_mode_selection():
-    option = st.radio("Select the mode that suits you", ("Upload a data file", "Adjust sliders"))
+# Create columns for cleaner layout in the sidebar
+def create_feature_inputs():
+    inputs = {}
     
-    if option == "Upload a data file":
-        uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-        if uploaded_file is not None:
-            # Read the uploaded CSV file
-            data = pd.read_csv(uploaded_file)
-            st.write(data)
-            return data
-    elif option == "Adjust sliders":
-        # Show the sliders
-        return None
-
-# Display the mode selection
-selected_data = display_mode_selection()
-
-if selected_data is None:
-    # Sliders section to adjust values
-    st.sidebar.header("Choose the variable values")
-
-    # Dropdown menu for proteins
-    selected_protein = st.sidebar.selectbox("Choose the protein", list(proteins_dict.keys()))
-    protein_code = proteins_dict[selected_protein]
+    for feature, config in feature_info.items():
+        if config["type"] == "numeric":
+            inputs[feature] = st.sidebar.slider(
+                feature, 
+                min_value=float(config["min"]), 
+                max_value=float(config["max"]), 
+                value=float(config["default"]), 
+                step=float(config["step"]),
+                help=config["help"]
+            )
     
-    protein_codes = st.sidebar.slider("Protein codes", min_value=1, max_value=100, value=protein_code)
-    protein_concentration = st.sidebar.slider("Protein Concentration (%)", min_value=0.0, max_value=100.0, value=50.0)
-    treatment_code = st.sidebar.slider("Treatment code", min_value=1, max_value=10, value=5)
-    treatment_condition_code = st.sidebar.slider("Treatment condition code", min_value=1, max_value=10, value=5)
-    treatment_condition_value = st.sidebar.slider("Treatment condition value", min_value=0.0, max_value=100.0, value=50.0)
-    treatment_temperature = st.sidebar.slider("Treatment temperature (°C)", min_value=-20, max_value=100, value=25)
-    treatment_time = st.sidebar.slider("Treatment time (min)", min_value=0.1, max_value=100.0, value=5.0)
-    additive_concentration = st.sidebar.slider("Additives Concentration (%)", min_value=0.0, max_value=100.0, value=50.0)
-    pH = st.sidebar.slider("pH", min_value=1.0, max_value=14.0, value=7.0)
-    ionic_strength = st.sidebar.slider("Ionic strength (M)", min_value=0.0, max_value=1.0, value=0.5)
-    heating_temperature = st.sidebar.slider("Heating temperature (°C) for gel preparation", min_value=0, max_value=200, value=100)
-    heating_hold_time = st.sidebar.slider("Heating/hold time (min)", min_value=0.1, max_value=300.0, value=60.0)
-    samples_stored = st.sidebar.slider("Samples stored (°C)", min_value=-80, max_value=25, value=4)
-    storage_time = st.sidebar.slider("Storage time (h)", min_value=0, max_value=1000, value=500)
-    gel_formation = st.sidebar.slider("If a gel can be formed (0-1)", min_value=0, max_value=1, value=0)
+    return inputs
 
-    # Categorical variables
-    additives = st.sidebar.selectbox("Additives", ["None", "Additive A", "Additive B", "Additive C"])
-    type_of_salt = st.sidebar.selectbox("Type of salt", ["NaCl", "KCl", "MgCl2"])
+# File upload function
+uploaded_file = st.sidebar.file_uploader("Télécharger un fichier CSV", type=["csv"])
 
-    # Encoding categorical variables
-    additives_dict = {"None": 0, "Additive A": 1, "Additive B": 2, "Additive C": 3}
-    type_of_salt_dict = {"NaCl": 0, "KCl": 1, "MgCl2": 2}
-
-    additives_encoded = additives_dict[additives]
-    type_of_salt_encoded = type_of_salt_dict[type_of_salt]
-
-    # Create the feature array
-    X_input = np.array([[ 
-        protein_codes, protein_concentration, treatment_code, treatment_condition_code,
-        treatment_condition_value, treatment_temperature, treatment_time,
-        additives_encoded, additive_concentration, pH, type_of_salt_encoded,
-        ionic_strength, heating_temperature, heating_hold_time, samples_stored,
-        storage_time, gel_formation
-    ]])
-
-    # Create a mini dataset for client selection
-    selection_client = pd.DataFrame(X_input, columns=[ 
-        'Protein codes', 'Protein Concentration', 'Treatment code', 'Treatment condition code',
-        'Treatment condition value', 'Treatment temperature', 'Treatment time', 'Additives',
-        'Additive Concentration', 'pH', 'Type of Salt', 'Ionic strength', 'Heating temperature',
-        'Heating/hold time', 'Samples stored', 'Storage time', 'Gel formation'
-    ])
+# Handle file upload
+if uploaded_file is not None:
+    # Lire le fichier CSV
+    data = pd.read_csv(uploaded_file)
+    st.write("Données téléchargées :")
+    st.dataframe(data.head())
     
-    st.write("### Client Selection")
-    st.write(selection_client)
-
-    # Prediction button (just above the grey line)
-    predict_button = st.button("Predict")
-    if predict_button:
-        prediction = model.predict(X_input)  
-        st.write("### Prediction result:")
-        st.write(f"Estimated gel hardness: {prediction[0]}")
-
-    # Add a grey blurred line to separate the prediction area from the information area
-    st.markdown(
-        """
-        <hr style="border: none; border-top: 1px solid gray; margin: 50px 0;"/>
-        <div style="filter: blur(5px);"></div>
-        """, 
-        unsafe_allow_html=True
-    )
-
-    # "About the model" section
-    st.markdown("### About the model")
-    st.write(
-        """
-        We used XGBoost as the model to predict gel hardness, with an accuracy score of 95%. This model is an ensemble algorithm that combines several decision trees to provide robust and efficient predictions. It is particularly suited for regression and classification problems with large datasets and complex relationships between variables.
-        """
-    )
-
-    # Display the image after the "About the model" section
-    st.image(r"C:\Model_to_predict_GelHardness\app\img\PredictGel.png", caption="Gel Hardness Prediction", use_column_width=True)
-
-    # Information section
-    st.markdown("## Information")
-
-    # New title for the variables
-    st.markdown("### Model Variables")
-
-    # Initial variables (first three variables)
-    first_three_vars = """
-    - **Protein codes** : Identifier of the chosen protein.
-    - **Protein Concentration** : Protein concentration as a percentage.
-    - **Treatment code** : Code representing the type of treatment applied.
-    """
+    # Utiliser ces données pour faire des prédictions
+    model = load_model()
     
-    # Button to show more or less
-if 'show_more' not in st.session_state:
-    st.session_state.show_more = False
-
-def toggle_show_more():
-    st.session_state.show_more = not st.session_state.show_more
-
-# Display all variables based on 'show_more' state
-if st.session_state.show_more:
-    # Display all variables
-    st.markdown(first_three_vars + """
-    - **Treatment condition code** : Code representing the treatment conditions applied.
-    - **Treatment condition value** : Value of the treatment applied.
-    - **Treatment temperature** : Temperature applied during the treatment (°C).
-    - **Treatment time** : Duration of the treatment (minutes).
-    - **Additives** : Additive used (e.g., gelling agent).
-    - **Additive Concentration** : Additive concentration (percentage).
-    - **pH** : pH level of the sample.
-    - **Ionic strength** : Ionic strength of the medium.
-    - **Heating temperature** : Temperature for gel preparation (°C).
-    - **Heating/hold time** : Heating duration.
-    - **Samples stored** : Sample storage temperature (°C).
-    - **Storage time** : Time the sample was stored.
-    - **Gel formation** : Whether a gel can be formed (binary).
-    """)
-else:
-    st.markdown(first_three_vars)
+    predictions = model.predict(data)
     
-# Display toggle button
-st.button("Show more", on_click=toggle_show_more)
+    st.header("Prédictions pour les données téléchargées")
+    data['Prédictions de dureté (g)'] = predictions
+    st.dataframe(data)
+
+# Create a prediction button
+if st.sidebar.button("Prédire la dureté du gel"):
+    # Convert inputs to DataFrame for prediction
+    input_df = pd.DataFrame([user_inputs])
+    
+    # Load the model
+    model = load_model()
+    
+    # Make prediction
+    prediction = model.predict(input_df)[0]
+    
+    # Display the prediction in main area
+    st.header("Résultats de la prédiction")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric("Dureté prédite du gel (g)", f"{prediction:.2f} g")
+    
+    with col2:
+        # Create a gauge or progress bar for visualization
+        fig, ax = plt.subplots(figsize=(3, 1))
+        cmap = plt.cm.RdYlGn
+        
+        # Normalize the prediction for visualization (assuming max around 2000g based on the data)
+        max_value = 2000
+        normalized_value = min(prediction / max_value, 1.0)  
+        
+        ax.barh(0, normalized_value, color=cmap(normalized_value), height=0.3)
+        ax.barh(0, 1, color='lightgrey', height=0.3, alpha=0.3)
+        
+        ax.set_xlim(0, 1)
+        ax.set_ylim(-0.5, 0.5)
+        ax.set_yticks([])
+        ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
+        ax.set_xticklabels(['0', '500', '1000', '1500', '2000'])
+        ax.set_xlabel('Dureté (g)')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        
+        st.pyplot(fig)
+    
+    # Feature importance visualization
+    st.subheader("Importance des caractéristiques")
+    
+    importance = model.feature_importances_
+    feature_importance_df = pd.DataFrame({
+        'Caractéristique': input_df.columns,
+        'Importance': importance
+    }).sort_values('Importance', ascending=False)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(x='Importance', y='Caractéristique', data=feature_importance_df, palette='viridis')
+    ax.set_title('Importance des caractéristiques pour la prédiction')
+    ax.set_xlabel('Score d\'importance')
+    ax.set_ylabel('Caractéristique')
+    st.pyplot(fig)
+    
+    # Show input parameters used
+    st.subheader("Paramètres d'entrée utilisés")
+    st.dataframe(input_df)
