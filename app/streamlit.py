@@ -11,7 +11,7 @@ import base64
 # Load the model
 @st.cache_resource
 def load_model():
-    return joblib.load('Model_Save\modelBoosting.joblib')
+    return joblib.load('modelBoosting.joblib')
 
 # App title and description
 st.set_page_config(
