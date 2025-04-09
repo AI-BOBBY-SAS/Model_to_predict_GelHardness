@@ -165,27 +165,51 @@ if st.sidebar.button("Predict Gel Hardness"):
             input_df = input_df.rename(columns={"Protein Name": "Protein codes"})
             # Convertir la valeur en un code numérique basé sur votre dataset
             protein_codes = {
-                "Whey Protein Isolate": 10301,  # Code le plus fréquent dans votre dataset
-                "Beta-lactoglobulin": 10107,
-                "Alpha-lactalbumin": 10501,
-                "Casein": 10401,
-                "Soy Protein Isolate": 11101,
-                "Pea Protein": 30105,  # Très fréquent dans votre dataset
-                "Egg Albumin": 30107,
-                "Wheat Gluten": 30108,
-                "Myofibrillar Protein": 30302,
-                "Collagen": 30303,
-                "Rice Protein": 11803,
-                "Chia Protein": 11804,
-                "Quinoa Protein": 12001,
-                "Lentil Protein": 12002,
-                "Gelatin": 30304,
-                "Hemp Protein": 30401,
-                "Potato Protein": 30402,
-                "Zein Protein": 30403,
-                "Lupin Protein": 30404,
-                "Flaxseed Protein": 10305
-            }
+            'Tilapia (Orechromis niloticus)': 20113,
+            'Conglycinin (7S)': 10303,
+            'Amaranth protein isolate': 12601,
+            'Black bean protein isolate (BBPI)': 11804,
+            'Bovine plasma protein': 30403,
+            'Casein Protein': 30104,
+            'Chicken plasma protein': 30401,
+            'Chickpea Protein Concentration': 10417,
+            'Chickpea Protein Isolate': 10412,
+            'Cowpea Protein': 11701,
+            'Dried egg white protein': 30303,
+            'Duck Egg White Protein': 30305,
+            'Egg White Protein': 30302,
+            'Egg ovalbumin Protein': 30304,
+            'European Anguilla anguilla (eel) protein isolate (EPI)': 20119,
+            'Ginkgo Seed Protein Isolate (GSPI)': 10501,
+            'Glycinin (11S)': 10302,
+            'Lentil Protein Isolate (LPI)': 10107,
+            'Mung Bean Protein Isolate (MBPI)': 10801,
+            'Native soy protein isolate (SPIn)': 10305,
+            'Oyster (Crassostrea gigas) protein': 20115,
+            'Pea Protein Concentrate (PPC)': 10404,
+            'Pea Protein Isolate (PPI)': 10401,
+            'Peanut Protein Isolate (PPI)': 11101,
+            'Porcine plasma protein': 30402,
+            'Potato Protein': 12002,
+            'Potato Protein Isolate': 12001,
+            'Potato protein isolate (PPI)': 12001,
+            'Rapeseed protein isolates': 12301,
+            'Rice Glutelin (RG)': 11301,
+            'Sheep plasma protein': 30404,
+            'Silver carp Myofibrillar Protein': 20103,
+            'Soy Protein Isolate (SPI)': 10301,
+            'Soy protein Isolate': 10301,
+            'Soy protein isolate': 10301,
+            'Walnut Protein Isolate (WNPI)': 11501,
+            'Wheat gluten': 11203,
+            'Whey Protein Isolate (WPI)': 30105,
+            'Whey protein': 30108,
+            'Whey protein concentrate': 30107,
+            'Whey protein isolate': 30105,
+            'Oat protein isolate (OPI)': 11002,
+            'Pinto bean protein isolate': 11803
+        }
+
             # Assigner le code numérique correspondant ou une valeur par défaut
             input_df["Protein codes"] = protein_codes.get(protein_name, 10301)  # 10301 comme valeur par défaut
         
