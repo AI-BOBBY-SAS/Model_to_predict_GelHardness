@@ -50,13 +50,13 @@ feature_info = {
     "ionic strength (M)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 0.1, "step": 0.001, "help": "Ionic strength in Molarity"},
     "Treatment code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1, "help": "Code identifying the treatment type"},
     "Treatment condition code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1, "help": "Code for treatment condition"},
-    "Treatment condition value": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 100.0, "step": 10.0, "help": "Value for treatment condition"},
+    "Treatment condition value": {"type": "numeric", "min": 0.0, "max": 600.0, "default": 100.0, "step": 10.0, "help": "Value for treatment condition"},
     "Treatment temperature ( °C)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 80.0, "step": 5.0, "help": "Temperature of treatment in °C"},
     "Treatment time (min)": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 30.0, "step": 5.0, "help": "Duration of treatment in minutes"},
-    "Additives": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 0.0, "step": 0.01, "help": "Code identifying additives used"},
+    "Additives": {"type": "numeric", "min": 0.0, "max": 91201, "default": 0.0, "step": 0.01, "help": "Code identifying additives used"},
     "Additives Concentration (%)": {"type": "numeric", "min": 0.0, "max": 10.0, "default": 0.5, "step": 0.1, "help": "Concentration of additives in percentage"},
-    "Heating temperature (°C) for gel preparation": {"type": "numeric", "min": 50.0, "max": 120.0, "default": 90.0, "step": 5.0, "help": "Temperature for gel preparation in °C"},
-    "Heating/hold time (min)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 30.0, "step": 5.0, "help": "Duration of heating/hold in minutes"},
+    "Heating temperature (°C) for gel preparation": {"type": "numeric", "min": 40.0, "max": 120.0, "default": 90.0, "step": 5.0, "help": "Temperature for gel preparation in °C"},
+    "Heating/hold time (min)": {"type": "numeric", "min": 0.0, "max": 130.0, "default": 30.0, "step": 5.0, "help": "Duration of heating/hold in minutes"},
     "Samples stored (°C)": {"type": "numeric", "min": 0.0, "max": 30.0, "default": 4.0, "step": 1.0, "help": "Storage temperature in °C"},
     "Storage time (h)": {"type": "numeric", "min": 0.0, "max": 72.0, "default": 12.0, "step": 1.0, "help": "Duration of storage in hours"},
     "If a gel can be formed (0-1)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 1.0, "step": 1.0, "help": "Binary value indicating if gel can be formed (1) or not (0)"}
@@ -68,27 +68,60 @@ feature_info = {
 # Create columns for cleaner layout in the sidebar
 def create_feature_inputs():
     inputs = {}
-    
+
+    st.sidebar.markdown("### 🔧 Configuring the settings")
+    st.sidebar.markdown("Each parameter can be entered **manually** or adjusted with the **slider**.")
+
     for feature, config in feature_info.items():
-        if config["type"] == "numeric":
-            # Ensure all slider values are of consistent float type
-            inputs[feature] = st.sidebar.slider(
-                feature, 
-                min_value=float(config["min"]), 
-                max_value=float(config["max"]), 
-                value=float(config["default"]), 
-                step=float(config["step"]),
-                help=config["help"]
-            )
-        elif config["type"] == "select":
-            inputs[feature] = st.sidebar.selectbox(
-                feature,
-                options=config["options"],
-                index=config["options"].index(config["default"]),
-                help=config["help"]
-            )
-    
+        key = feature.replace(" ", "_").replace("(", "").replace(")", "").replace("%", "").replace("-", "_")
+
+        with st.sidebar.expander(f"🔹 {feature}"):
+            if config["type"] == "numeric":
+                # Initialisation
+                if key not in st.session_state:
+                    st.session_state[key] = float(config["default"])
+
+                col1, col2 = st.columns([1, 3])
+
+                with col1:
+                    st.markdown("manual")
+                    num_input = st.number_input(
+                        "", 
+                        min_value=float(config["min"]), 
+                        max_value=float(config["max"]), 
+                        value=st.session_state[key], 
+                        step=float(config["step"]),
+                        key=f"{key}_input"
+                    )
+                    st.session_state[key] = num_input
+
+                with col2:
+                    st.markdown("**🎚️ slider**")
+                    slider_input = st.slider(
+                        "", 
+                        min_value=float(config["min"]), 
+                        max_value=float(config["max"]), 
+                        value=st.session_state[key], 
+                        step=float(config["step"]),
+                        key=f"{key}_slider",
+                        help=config["help"]
+                    )
+                    st.session_state[key] = slider_input
+
+                inputs[feature] = st.session_state[key]
+
+            elif config["type"] == "select":
+                inputs[feature] = st.selectbox(
+                    f"🔽 {feature}",
+                    options=config["options"],
+                    index=config["options"].index(config["default"]),
+                    help=config["help"],
+                    key=key
+                )
+
     return inputs
+
+
 
 # Create reset button
 if st.sidebar.button("Reset to Defaults"):
