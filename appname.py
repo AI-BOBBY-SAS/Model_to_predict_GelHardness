@@ -31,16 +31,28 @@ st.sidebar.header("Input Parameters")
 # Define columns based on the model
 # Define columns based on the model
 feature_info = {
-        "Protein Name": {
+    "Protein Name": {
         "type": "select",
-        "options": sorted([
-            "Whey Protein Isolate", "Beta-lactoglobulin", "Alpha-lactalbumin", "Casein",
-            "Soy Protein Isolate", "Pea Protein", "Egg Albumin", "Wheat Gluten",
-            "Myofibrillar Protein", "Collagen", "Rice Protein", "Chia Protein",
-            "Quinoa Protein", "Lentil Protein", "Gelatin", "Hemp Protein",
-            "Potato Protein", "Zein Protein", "Lupin Protein", "Flaxseed Protein"
-        ]),
-        "default": "Alpha-lactalbumin",
+        "options": sorted(set([
+            'Tilapia (Orechromis niloticus)', 'conglycinin (7S)', 'Amaranth protein isolate',
+            'Black bean protein isolate (BBPI)', 'Bovine plasma protein', 'Casein Protein',
+            'Chicken plasma protein', 'Chicken plasma protein ', 'Chickpea Protein Concentration ',
+            'Chickpea Protein Isolate', 'Cowpea Protein', 'Cowpea protein isolate',
+            'Dried egg white protein', 'Duck Egg White Protein', 'Duck egg white ', 'Egg White Protein',
+            'Egg ovalbumin Protein', 'Egg white ', 'European Anguilla anguilla (eel) protein isolate (EPI)',
+            'Ginkgo Seed Protein Isolate (GSPI)', 'Glycinin (11S)', 'Lentil Protein Isolate (LPI)',
+            'Mung Bean Protein Isolate (MBPI)', 'Native soy protein isolate (SPIn)',
+            'Oyster (Crassostrea gigas) protein', 'Pea Protein Concentrate (PPC)',
+            'Pea Protein Isolate (PPI)', 'Pea Protein Isolate (PPI) ', 'Peanut Protein Isolate (PPI)',
+            'Porcine Plasma protein', 'Porcine plasma protein', 'Potato Protein', 'Potato Protein Isolate ',
+            'Potato protein isolate (PPI)', 'Rapeseed protein isolates', 'Rice Glutelin (RG)',
+            'Sheep plasma protein ', 'Silver carp Myofibrillar Protein', 'Soy Protein Isolate (SPI)',
+            'Soy protein Isolate', 'Soy protein isolate', 'Walnut Protein Isolate (WNPI)', 'Wheat gluten',
+            'Whey Protein Isolate (WPI)', 'Whey protein', 'Whey protein concentrate',
+            'Whey protein isolate', 'oat protein isolate (OPI)', 'pinto bean protein isolate',
+            'whey protein concentrate', 'whey protein isolate', 'whey protein isolate (WPI)'
+        ])),
+        "default": "Amaranth protein isolate",
         "help": "Name of the protein used (corresponds to 'Protein' column in dataset)"
     },
 
@@ -60,8 +72,8 @@ feature_info = {
     "Samples stored (°C)": {"type": "numeric", "min": 0.0, "max": 30.0, "default": 4.0, "step": 1.0, "help": "Storage temperature in °C"},
     "Storage time (h)": {"type": "numeric", "min": 0.0, "max": 72.0, "default": 12.0, "step": 1.0, "help": "Duration of storage in hours"},
     "If a gel can be formed (0-1)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 1.0, "step": 1.0, "help": "Binary value indicating if gel can be formed (1) or not (0)"}
-    
 }
+
 
 
 
