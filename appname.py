@@ -29,25 +29,41 @@ Simply adjust the parameters and click 'Predict' to get the prediction.
 st.sidebar.header("Input Parameters")
 
 # Define columns based on the model
+# Define columns based on the model
 feature_info = {
-    "Protein Name": {"type": "select", "options": ["Whey Protein Isolate", "Soy Protein Isolate", "Pea Protein", "Egg Albumin", "Wheat Gluten", "Casein", "Beta-lactoglobulin", "Myofibrillar Protein", "Collagen", "Chia Protein"], "default": "Whey Protein Isolate", "help": "Name of the protein used (corresponds to 'Protein' column in dataset)"},
-    "Protein Concentration (%)": {"type": "numeric", "min": 1.0, "max": 20.0, "default": 10.0, "step": 0.5, "help": "Concentration of protein in percentage"},
-    "Treatment code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1000.0, "help": "Code identifying the treatment type"},
-    "Treatment condition code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1000.0, "help": "Code for treatment condition"},
+        "Protein Name": {
+        "type": "select",
+        "options": sorted([
+            "Whey Protein Isolate", "Beta-lactoglobulin", "Alpha-lactalbumin", "Casein",
+            "Soy Protein Isolate", "Pea Protein", "Egg Albumin", "Wheat Gluten",
+            "Myofibrillar Protein", "Collagen", "Rice Protein", "Chia Protein",
+            "Quinoa Protein", "Lentil Protein", "Gelatin", "Hemp Protein",
+            "Potato Protein", "Zein Protein", "Lupin Protein", "Flaxseed Protein"
+        ]),
+        "default": "Alpha-lactalbumin",
+        "help": "Name of the protein used (corresponds to 'Protein' column in dataset)"
+    },
+
+    "Protein Concentration (%)": {"type": "numeric", "min": 1.0, "max": 30.0, "default": 10.0, "step": 0.25, "help": "Concentration of protein in percentage"},
+    "pH": {"type": "numeric", "min": 1.0, "max": 14.0, "default": 7.0, "step": 0.1, "help": "pH value of the solution"},
+    "Type of salt": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 60000.0, "step": 1, "help": "Code identifying the type of salt used"},
+    "ionic strength (M)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 0.1, "step": 0.001, "help": "Ionic strength in Molarity"},
+    "Treatment code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1, "help": "Code identifying the treatment type"},
+    "Treatment condition code": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 30000.0, "step": 1, "help": "Code for treatment condition"},
     "Treatment condition value": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 100.0, "step": 10.0, "help": "Value for treatment condition"},
     "Treatment temperature ( °C)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 80.0, "step": 5.0, "help": "Temperature of treatment in °C"},
     "Treatment time (min)": {"type": "numeric", "min": 0.0, "max": 500.0, "default": 30.0, "step": 5.0, "help": "Duration of treatment in minutes"},
-    "Additives": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 0.0, "step": 1000.0, "help": "Code identifying additives used"},
+    "Additives": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 0.0, "step": 0.01, "help": "Code identifying additives used"},
     "Additives Concentration (%)": {"type": "numeric", "min": 0.0, "max": 10.0, "default": 0.5, "step": 0.1, "help": "Concentration of additives in percentage"},
-    "pH": {"type": "numeric", "min": 1.0, "max": 14.0, "default": 7.0, "step": 0.1, "help": "pH value of the solution"},
-    "Type of salt": {"type": "numeric", "min": 0.0, "max": 90000.0, "default": 60000.0, "step": 1000.0, "help": "Code identifying the type of salt used"},
-    "ionic strength (M)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 0.1, "step": 0.01, "help": "Ionic strength in Molarity"},
     "Heating temperature (°C) for gel preparation": {"type": "numeric", "min": 50.0, "max": 120.0, "default": 90.0, "step": 5.0, "help": "Temperature for gel preparation in °C"},
     "Heating/hold time (min)": {"type": "numeric", "min": 0.0, "max": 120.0, "default": 30.0, "step": 5.0, "help": "Duration of heating/hold in minutes"},
     "Samples stored (°C)": {"type": "numeric", "min": 0.0, "max": 30.0, "default": 4.0, "step": 1.0, "help": "Storage temperature in °C"},
     "Storage time (h)": {"type": "numeric", "min": 0.0, "max": 72.0, "default": 12.0, "step": 1.0, "help": "Duration of storage in hours"},
     "If a gel can be formed (0-1)": {"type": "numeric", "min": 0.0, "max": 1.0, "default": 1.0, "step": 1.0, "help": "Binary value indicating if gel can be formed (1) or not (0)"}
+    
 }
+
+
 
 # Create columns for cleaner layout in the sidebar
 def create_feature_inputs():
@@ -130,9 +146,13 @@ if st.sidebar.button("Predict Gel Hardness"):
         
         # Load the model
         model = load_model()
-        
+
+        # Réorganiser les colonnes avant prédiction
+        input_df = input_df[model.get_booster().feature_names]
+
         # Make prediction
         prediction = model.predict(input_df)[0]
+
         
         # Categorize the gel hardness
         category, range_text, category_color = categorize_gel_hardness(prediction)
