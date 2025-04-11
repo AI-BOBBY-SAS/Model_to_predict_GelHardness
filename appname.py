@@ -354,7 +354,7 @@ if st.sidebar.button("Predict Gel Hardness"):
         try:
             check_is_fitted(model)
 
-            df_reference = pd.read_excel(r"C:\Model_to_predict_GelHardness\Data\Imputation_data_ImputeRow.xlsx").drop(columns=["Unnamed: 0"], errors="ignore")  # adapte le chemin si besoin
+            df_reference = pd.read_excel(r"Data\Imputation_data_ImputeRow.xlsx").drop(columns=["Unnamed: 0"], errors="ignore")  # adapte le chemin si besoin
 
             suggestions = suggest_inputs_for_target(
                 model,
