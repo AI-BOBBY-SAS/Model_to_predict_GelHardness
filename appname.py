@@ -5,6 +5,34 @@ import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from sklearn.utils.validation import check_is_fitted
+
+# --- Suggestion generator ---
+def suggest_inputs_for_target(model, target_value, df_reference, epsilon=0.5, N=10000, method="random"):
+    import numpy as np
+    import pandas as pd
+
+    input_columns = df_reference.columns.tolist()
+    if "Hardness/firmness/strength (g)" in input_columns:
+        input_columns.remove("Hardness/firmness/strength (g)")
+
+    if method == "real":
+        X_candidates = df_reference[input_columns].copy()
+    elif method == "random":
+        np.random.seed(42)  # Graine fixe pour reproductibilité
+        bounds = {col: (df_reference[col].min(), df_reference[col].max()) for col in input_columns}
+        X_candidates = pd.DataFrame({
+            col: np.random.uniform(low, high, N)
+            for col, (low, high) in bounds.items()
+        })
+    else:
+        raise ValueError("Méthode inconnue. Choisir 'real' ou 'random'.")
+
+    y_candidates = model.predict(X_candidates)
+    mask = np.abs(y_candidates - target_value) < epsilon
+    suggestions = X_candidates[mask]
+    return suggestions
+
 
 # Load the model
 @st.cache_resource
@@ -321,12 +349,79 @@ if st.sidebar.button("Predict Gel Hardness"):
             - Storage conditions can also affect the final gel properties.
             - To achieve a different gel category, adjust the parameters that have the highest importance.
         """)
+        
+                # Suggested realistic combinations
+        try:
+            check_is_fitted(model)
+
+            df_reference = pd.read_excel(r"C:\Model_to_predict_GelHardness\Data\Imputation_data_ImputeRow.xlsx").drop(columns=["Unnamed: 0"], errors="ignore")  # adapte le chemin si besoin
+
+            suggestions = suggest_inputs_for_target(
+                model,
+                prediction,
+                df_reference,
+                epsilon=0.5,
+                method="random"  # ou "real" si tu veux tester les vraies données
+            )
+
+            st.subheader("Suggested Input Combinations")
+            if not suggestions.empty:
+                styled_suggestions = suggestions.head(5).style.background_gradient(cmap="Blues")
+                st.dataframe(styled_suggestions, use_container_width=True)
+                st.caption("These are randomly generated but realistic combinations that could result in the predicted gel hardness.")
+            else:
+                st.warning("No realistic combinations found for the predicted target value.")
+        except Exception as suggest_error:
+            st.error("An error occurred while generating suggestions.")
+            st.code(str(suggest_error))
+
     
     except Exception as e:
         st.error(f"An error occurred during prediction: {str(e)}")
         st.error("Traceback:")
         import traceback
         st.code(traceback.format_exc())
+
+st.markdown("---")
+st.header("Batch Prediction from Uploaded File")
+uploaded_file = st.file_uploader("Upload your CSV or Excel file with input data", type=["csv", "xlsx"])
+
+if uploaded_file is not None:
+    try:
+        # Lecture du fichier
+        if uploaded_file.name.endswith('.csv'):
+            df_uploaded = pd.read_csv(uploaded_file)
+        else:
+            df_uploaded = pd.read_excel(uploaded_file)
+
+        df_uploaded = df_uploaded.drop(columns=["Unnamed: 0"], errors="ignore")
+
+        expected_columns = load_model().get_booster().feature_names
+        missing_cols = [col for col in expected_columns if col not in df_uploaded.columns]
+
+        if missing_cols:
+            st.error(f"Missing columns: {missing_cols}")
+        else:
+            model = load_model()
+            df_uploaded = df_uploaded[expected_columns]
+            predictions = model.predict(df_uploaded)
+            result_df = df_uploaded.copy()
+            result_df["Predicted Gel Hardness (g)"] = predictions
+
+            st.success("✅ Predictions completed!")
+            st.dataframe(result_df)
+
+            csv_result = result_df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📄 Download predictions as CSV",
+                data=csv_result,
+                file_name="gel_hardness_predictions.csv",
+                mime="text/csv"
+            )
+
+    except Exception as upload_error:
+        st.error("An error occurred while processing the uploaded file.")
+        st.code(str(upload_error))
 
 # Add a section explaining the model
 st.markdown("---")
