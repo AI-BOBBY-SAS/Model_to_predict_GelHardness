@@ -8,7 +8,7 @@ model = joblib.load(r"Model_Save\modelBoosting.joblib")
 
 # Protein dictionary
 proteins_dict = {
-    'Tilapia (Orechromis niloticus)': 20113, '?-conglycinin (7S)': 10303, 'Amaranth protein isolate': 12601,
+    'Tilapia (Orechromis niloticus)': 20113, 'conglycinin (7S)': 10303, 'Amaranth protein isolate': 12601,
     'Black bean protein isolate (BBPI)': 11804, 'Bovine plasma protein': 30403, 'Casein Protein': 30104,
     'Chicken plasma protein': 30401, 'Chicken plasma protein ': 30401, 'Chickpea Protein Concentration ': 10417,
     'Chickpea Protein Isolate': 10412, 'Cowpea Protein': 11701, 'Cowpea protein isolate': 11701,
