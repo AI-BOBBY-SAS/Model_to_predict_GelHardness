@@ -8,3 +8,4 @@ qrcode
 pillow
 scikit-learn
 xgboost
+openpyxl
