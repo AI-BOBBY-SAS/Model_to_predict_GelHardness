@@ -1,0 +1,43 @@
+=== TARGET ENCODING DETAILS ===
+Target column used: 'Hardness/firmness/strength (g)'
+
+🔹 Explanation:
+For each unique value in a categorical column, we replace it with the average
+of the target values associated with that category in the dataset.
+This is known as Target Encoding.
+
+🔸 Formula :
+Encoded value = Average of the target ('Hardness/firmness/strength (g)')
+for all rows where the category appears.
+Example: if 'Country = France' → take the average hardness for all rows where Country = France.
+
+--- Encoded column: Protein Type ---
+Rice Glutelin (RG) : Mean = 562.38, Count = 4
+Soy Protein Isolate (SPI) : Mean = 42.832, Count = 10
+
+--- Encoded column: Treatment Type ---
+Enzymatic-Laccase : Mean = 562.38, Count = 4
+Moderate electric field (MEF) : Mean = 43.9412, Count = 8
+Pre Heating : Mean = 38.395, Count = 2
+
+--- Encoded column: Treatment condition  ---
+Enzyme- U/g : Mean = 562.38, Count = 4
+Moderate electric field (MEF) - V/cm : Mean = 43.9412, Count = 8
+Pre Heating- °C : Mean = 38.395, Count = 2
+
+--- Encoded column: Additives ---
+Glucono-?-lactone (GDL) : Mean = 42.832, Count = 10
+pectin 30 kDa : Mean = 562.38, Count = 4
+
+--- Encoded column: Type of salt ---
+Ca2+ : Mean = 562.38, Count = 4
+NaH2PO10 : Mean = 53.65, Count = 1
+NaH2PO11 : Mean = 47.98, Count = 1
+NaH2PO12 : Mean = 49.84, Count = 1
+NaH2PO13 : Mean = 44.21, Count = 1
+NaH2PO4 : Mean = 34.62, Count = 1
+NaH2PO5 : Mean = 41.73, Count = 1
+NaH2PO6 : Mean = 38.25, Count = 1
+NaH2PO7 : Mean = 39.91, Count = 1
+NaH2PO8 : Mean = 35.96, Count = 1
+NaH2PO9 : Mean = 42.17, Count = 1
