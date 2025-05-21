@@ -113,6 +113,12 @@ def create_feature_inputs():
     st.sidebar.markdown("Each parameter can be entered **manually** or adjusted with the **slider**.")
 
     for feature, config in feature_info.items():
+        # Masquer le champ "If a gel can be formed (0-1)" mais le garder dans les inputs
+        if feature == "If a gel can be formed (0-1)":
+            inputs[feature] = config["default"]
+            continue
+
+        
         key = feature.replace(" ", "_").replace("(", "").replace(")", "").replace("%", "").replace("-", "_")
 
         with st.sidebar.expander(f"🔹 {feature}"):
